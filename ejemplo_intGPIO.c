@@ -27,20 +27,21 @@ void configGPIO(void){
 	LPC_GPIO2->FIODIR &=~(1<<10);	//P2.10 como entrada
 	LPC_PINCON->PINMODE4 |=(0x3<<20);	//Rpullup
 	LPC_PINCON->PINSEL4 |=(1<<24);	//EINT2 P2.12
+	LPC_PINCON->PINMODE4 |=(0x3<<24);	//Rpullup
 	LPC_GPIO0->FIOSET |=(1<<22);
 }
 void configST(void){
 	SysTick_Config(10000000);
 }
 void configIntGPIO(void){
-	LPC_GPIOINT->IO2IntEnR |=(1<<10);	//Int flanco subida en P2.11
+	LPC_GPIOINT->IO2IntEnR |=(1<<10);	//Int flanco subida en P2.10
 	LPC_GPIOINT->IO2IntClr |=(1<<10);	//Limpio bandera
 	NVIC_EnableIRQ(EINT3_IRQn);
 }
 void configEINT(void){
 	LPC_SC->EXTINT |=(1<<2);	//Limpia bandera int
 	LPC_SC->EXTMODE |=(1<<2);	//Int por flanco
-	LPC_SC->EXTPOLAR &=~(0<<2);	//Int por flanco ascendente
+	LPC_SC->EXTPOLAR |=(1<<2);	//Int por flanco ascendente
 	NVIC_EnableIRQ(EINT2_IRQn);
 }
 void SysTick_Handler(void){
