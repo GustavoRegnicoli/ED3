@@ -38,7 +38,10 @@ return;
 void SysTick_Handler(void){		//interrumpe cada 0.1 seg
 	contador++;
 
-
+	if(contador%10==0){
+		LPC_ADC->ADCR &= ~(7<<24);  // limpiar START
+		LPC_ADC->ADCR |= (1<<24);   // start now
+	}
 
 
 	if(mayor3==1){
@@ -64,7 +67,7 @@ void confADC(void){
 	//LPC_ADC->ADCR |=(255 << 8);  //[15:8] CLKDIV
 	LPC_ADC->ADCR |= (1 << 0);   // channel
 	LPC_ADC->ADCR &= ~(1<<16);
-	LPC_ADC->ADCR |= (1 << 16);   // burst
+	//LPC_ADC->ADCR |= (1 << 16);   // burst
 	LPC_PINCON->PINMODE1 |= (1<<15); //neither pull-up nor pull-down.
 	LPC_PINCON->PINSEL1 |= (1<<14);	 //seleccionar función ADC en pinconnect block
 	LPC_ADC->ADINTEN |= (1<<0);
