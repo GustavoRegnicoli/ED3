@@ -23,6 +23,7 @@ void configPin(void);
 void configDAC(void);
 void config_timer(void);
 void configEINT(void);
+
 int main (void)
 {
 
@@ -42,7 +43,7 @@ int main (void)
 
 
 void configEINT(void){
-	LPC_SC->EXTINT |=(1<<0);		//limpia bandera
+	/*LPC_SC->EXTINT |=(1<<0);		//limpia bandera
 	LPC_SC->EXTMODE |=(1<<0);		//int por flanco
 	LPC_SC->EXTPOLAR |=(1<<0);		//alto
 	NVIC_EnableIRQ(EINT0_IRQn);
@@ -51,6 +52,24 @@ void configEINT(void){
 	LPC_SC->EXTMODE |=(1<<1);		//int por flanco
 	LPC_SC->EXTPOLAR |=(1<<0);		//alto
 	NVIC_EnableIRQ(EINT1_IRQn);
+*/
+    EXTI_InitTypeDef exti_cfg;
+
+    // ---------- EINT0 ----------
+    exti_cfg.EXTI_Line = EXTI_EINT0;
+    exti_cfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
+    exti_cfg.EXTI_polarity = EXTI_POLARITY_HIGH_ACTIVE_OR_RISING_EDGE;
+    EXTI_Config(&exti_cfg);
+    EXTI_ClearEXTIFlag(EXTI_EINT0);
+    NVIC_EnableIRQ(EINT0_IRQn);
+
+    // ---------- EINT1 ----------
+    exti_cfg.EXTI_Line = EXTI_EINT1;
+    exti_cfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
+    exti_cfg.EXTI_polarity = EXTI_POLARITY_HIGH_ACTIVE_OR_RISING_EDGE;
+    EXTI_Config(&exti_cfg);
+    EXTI_ClearEXTIFlag(EXTI_EINT1);
+    NVIC_EnableIRQ(EINT1_IRQn);
 
 }
 
