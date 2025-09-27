@@ -24,6 +24,7 @@ void configPin(void);
 void configDAC(void);
 void config_timer(void);
 void configEINT(void);
+void configSysTick(void);
 
 int main (void)
 {
@@ -32,6 +33,7 @@ int main (void)
 	configPin();
 	configDAC();
 	configEINT();
+	configSysTick();
 
 	while(1)
 	{
@@ -74,24 +76,40 @@ void configEINT(void){
 
 }
 
+void configSysTick(void){
+	/*
+	 * 1/Cclk______1cuenta
+	 * 20e-3_______x=Cclk*0.02
+	 */
+	SysTick->LOAD=(SystemCoreClock/50)-1;//cuenta cada 0.02seg
+	SysTick->VAL=0;
+	SysTick->CTRL |=(0x7<<0);
+}
+//Probar antirebote
+void SysTick_Handler(void){
+	inte0=0;
+	inte1=0;
+}
+
+
 void EINT0_IRQHandler(void) {
 	LPC_SC->EXTINT |=(1<<0);//limpia bandera
-	inte0++;//antirebote?
+	inte0++;
 	if(inte0==1){
 
 	periodo = periodo + 10;
 	LPC_TIM0->MR0 = periodo;
 	LPC_TIM0->IR = 1;  // limpiar flag
-	if(periodo>=4294967295){//2^32
+	if(periodo>=4294967295){//2^32 ver frecuencia limite
 		periodo=4294967295;
 	}
-	inte0=0;
+
 	}
 }
 
 void EINT1_IRQHandler(void) {
 	LPC_SC->EXTINT |=(1<<1);		//limpia bandera
-	inte1++;//antirebote?
+	inte1++;
 	if(inte1==1){
 
 	periodo = periodo - 10;
@@ -100,7 +118,7 @@ void EINT1_IRQHandler(void) {
 	if(periodo<=100){
 			periodo=100;
 		}
-	inte1=0;
+
 		}
 }
 
