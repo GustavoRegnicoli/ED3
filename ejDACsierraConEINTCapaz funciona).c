@@ -18,7 +18,8 @@ uint32_t valorDAC =0;
 uint32_t valor =0;
 uint32_t indice =0;
 uint32_t periodo =1000;
-
+uint32_t inte0 =0;
+uint32_t inte1 =0;
 void configPin(void);
 void configDAC(void);
 void config_timer(void);
@@ -74,22 +75,32 @@ void configEINT(void){
 }
 
 void EINT0_IRQHandler(void) {
-	LPC_SC->EXTINT |=(1<<0);		//limpia bandera
+	LPC_SC->EXTINT |=(1<<0);//limpia bandera
+	inte0++;//antirebote?
+	if(inte0==1){
+
 	periodo = periodo + 10;
 	LPC_TIM0->MR0 = periodo;
 	LPC_TIM0->IR = 1;  // limpiar flag
 	if(periodo>=4294967295){//2^32
 		periodo=4294967295;
 	}
+	inte0=0;
+	}
 }
 
 void EINT1_IRQHandler(void) {
 	LPC_SC->EXTINT |=(1<<1);		//limpia bandera
+	inte1++;//antirebote?
+	if(inte1==1){
+
 	periodo = periodo - 10;
 	LPC_TIM0->MR0 = periodo;
 	LPC_TIM0->IR = 1;  // limpiar flag
-	if(periodo<=0){//2^32
-			periodo=0;
+	if(periodo<=100){
+			periodo=100;
+		}
+	inte1=0;
 		}
 }
 
