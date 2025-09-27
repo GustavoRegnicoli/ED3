@@ -12,12 +12,11 @@
 #include "lpc17xx_timer.h"
 
 
-__IO uint32_t adc_value;
-
 uint32_t DAC_Sierra [1000]={};
+uint32_t valorDAC =0;
 uint32_t valor =0;
 uint32_t indice =0;
-uint32_t frecuencia =100;
+uint32_t periodo =100000; // x*1e-6= T
 
 void configPin(void);
 void configDAC(void);
@@ -40,16 +39,19 @@ int main (void)
 
 	return 0;
 }
+
 void EINT0_IRQHandler(void) {
 
-	frecuencia=frecuencia-10;
-	config_timer();
+	periodo = periodo + periodo/10;
+	LPC_TIM0->MR0 = periodo;
+	LPC_TIM0->IR = 1;  // limpiar flag
 }
 
 void EINT1_IRQHandler(void) {
 
-    frecuencia=frecuencia+10;
-    config_timer();
+	periodo = periodo - periodo/10;
+	LPC_TIM0->MR0 = periodo;
+	LPC_TIM0->IR = 1;  // limpiar flag
 }
 
 // Ver si es necesario configurar este pin
@@ -66,19 +68,25 @@ return;
 }
 
 void configDAC(){
-	DAC_Init(LPC_DAC);
-    DAC_ConfigDAConverterControl(LPC_DAC, DAC_CNT_ENA);  // habilita DAC
+
+    DAC_CONVERTER_CFG_Type dac_cfg;
+
+    dac_cfg.CNT_ENA = ENABLE;   // habilita el contador del DAC
+    dac_cfg.DMA_ENA = DISABLE;  // no usamos DMA en este caso
+
+    DAC_Init(LPC_DAC);
+    DAC_ConfigDAConverterControl(LPC_DAC, &dac_cfg); // pasar puntero a la estructura
 
 	return;
 }
 void TIMER0_IRQHandler(void){
 	//MUESTRA SEÑAL
 	//Interrupcion cada x segundos, modifica el valor del pin p0.26 ,aumentando el valor de DAC_Sierra
-	
+
 	DAC_Sierra [indice]=valor;
 	DAC_UpdateValue(LPC_DAC, DAC_Sierra [indice]);
 	indice++;
-	
+	valorDAC=DAC_Sierra [indice];
 	//Para señal triangular
 	if(indice<500){
 		valor++;
@@ -86,7 +94,7 @@ void TIMER0_IRQHandler(void){
 	if(indice>500){
 	valor--;
 	}
-	
+
 	if(indice==1000){
 		indice=0;
 		valor=0;
@@ -107,7 +115,7 @@ void config_timer(){
 	struct_match.ResetOnMatch		=	ENABLE;
 	struct_match.StopOnMatch		=	DISABLE;//cuando hay un match se detiene o no el controlador
 	struct_match.ExtMatchOutputType	=	TIM_EXTMATCH_NOTHING;
-	struct_match.MatchValue			=	frecuencia;
+	struct_match.MatchValue			=	periodo;
 
 	TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &struct_config);
 	TIM_ConfigMatch(LPC_TIM0, &struct_match);
@@ -128,31 +136,12 @@ void config_timer(){
 void EINT0_Init(void){
 
 	LPC_PINCON->PINSEL4 &= ~(3 << 20);  // Limpiar bits
-
 	LPC_PINCON->PINSEL4 |=  (1 << 20);  // Función EINT0 (01)
-
-
-
 	LPC_PINCON->PINMODE4 &= ~(3 << 20);
-
 	LPC_PINCON->PINMODE4 |=  (3 << 20);  // Modo pull down
-
-
-
-	LPC_SC->EXTMODE |= (1 << 0); // 1 = flanco para EINT0
-
-
-
-	//LPC_SC->EXTPOLAR |= (1 << 0);  // 1 = flanco ascendente (rising edge)
-
-	LPC_SC->EXTPOLAR &= ~(1 << 0); // 0 = flanco descendente (falling edge)
-
-
-
+	LPC_SC->EXTMODE |= (1 << 0); // flanco para EINT0
+    LPC_SC->EXTPOLAR |= (1 << 0); // flanco ascendente (falling edge)
 	LPC_SC->EXTINT = (1 << 0);  // Limpiar cualquier interrupción pendiente
-
-
-
 	// Habilitar EINT0 en NVIC
 
 	NVIC_EnableIRQ(EINT0_IRQn);
@@ -160,34 +149,15 @@ void EINT0_Init(void){
 }
 
 
-
 void EINT1_Init(void) {
 
     // 1. Configurar P2.11 como EINT1
-
-    LPC_PINCON->PINSEL4 &= ~(3 << 22);   // limpiar bits 23:22
-
+	LPC_PINCON->PINSEL4 &= ~(3 << 22);   // limpiar bits 23:22
     LPC_PINCON->PINSEL4 |=  (1 << 22);   // seleccionar función EINT1
-
-
-
-    // 2. Configurar resistores: sin pull-up ni pull-down
-
     LPC_PINCON->PINMODE4 &= ~(3 << 22);  // limpiar
-
-    LPC_PINCON->PINMODE4 |=  (3 << 22);  // '10' = inactive (sin resistores)
-
-
-
-    // 3. Configurar como sensible a flanco descendente
-
-    LPC_SC->EXTMODE  |=  (1 << 1);  // 1 = edge sensitive
-
-    LPC_SC->EXTPOLAR &= ~(1 << 1);  // 0 = falling edge
-
-
-
-    // 4. Habilitar interrupción en NVIC
+    LPC_PINCON->PINMODE4 |=  (3 << 22);  // Modo pull down
+    LPC_SC->EXTMODE  |= (1 << 1);  // flanco
+    LPC_SC->EXTPOLAR |= (1 << 1);  // flanco ascendente
 
     NVIC_EnableIRQ(EINT1_IRQn);
 
