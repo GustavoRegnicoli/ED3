@@ -1,10 +1,17 @@
 #include "lpc17xx_gpio.h"
     void GPIO_Config(void) {
         // P0.22 como salida
-        GPIO_SetDir(0, (1<<22), 1);  // (puerto, máscara, 1=output)
+        GPIO_SetDir(0, (1<<22), 1);  // (puerto, pin, 1=output)
 
         // P2.10 como entrada
         GPIO_SetDir(2, (1<<10), 0);
+
+        GPIO_GetValue(port) //devuelve el estado.
+
+        GPIO_SetValue(port, mask) // pone en 1.
+
+        GPIO_ClearValue(port, mask) // pone en 0.    
+
     }
 
 #include "lpc17xx_gpio.h"
@@ -12,6 +19,17 @@
         // Config P2.10 para generar interrupción por flanco
         GPIO_IntCmd(2, (1<<10), 1);   // Habilita int. en puerto 2, pin 10, flanco
         NVIC_EnableIRQ(EINT3_IRQn);   // Todas las interrupciones GPIO caen en EINT3_IRQn
+
+        GPIO_IntCmd(port, mask, edge):
+        // edge = 0 → nivel
+        // edge = 1 → flanco
+
+        GPIO_GetIntStatus(port, pin, edge)// devuelve si ocurrió la interrupción.
+
+        GPIO_ClearInt(port, mask)// limpia flag.
+
+
+
     }
     void EINT3_IRQHandler(void) {
         if (GPIO_GetIntStatus(2, 10, 1)) {  // chequea si fue flanco en P2.10
@@ -34,8 +52,8 @@
 
         EXTI_InitTypeDef exti_cfg;
         exti_cfg.EXTI_Line = EXTI_EINT0;
-        exti_cfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
-        exti_cfg.EXTI_polarity = EXTI_POLARITY_HIGH_ACTIVE_OR_RISING_EDGE;
+        exti_cfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;//EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE
+        exti_cfg.EXTI_polarity = EXTI_POLARITY_HIGH_ACTIVE_OR_RISING_EDGE;//EXTI_MODE_LEVEL_SENSITIVE
         EXTI_Config(&exti_cfg);
 
         NVIC_EnableIRQ(EINT0_IRQn);
@@ -87,6 +105,16 @@
 
         NVIC_EnableIRQ(ADC_IRQn);
         ADC_StartCmd(LPC_ADC, ADC_START_CONTINUOUS);
+        /*
+        - ADC_START_CONTINUOUS
+*       - ADC_START_NOW
+*       - ADC_START_ON_EINT0
+*       - ADC_START_ON_CAP01
+*       - ADC_START_ON_MAT01
+*       - ADC_START_ON_MAT03
+*       - ADC_START_ON_MAT10
+*       - ADC_START_ON_MAT11
+*/
     }
 
     void ADC_IRQHandler(void) {
@@ -109,7 +137,7 @@
         DAC_Init(LPC_DAC);
         DAC_ConfigDAConverterControl(LPC_DAC, &dac_cfg);
     }
-    void DAC_Write(uint32_t value) {
+    void DAC_funcion() {
         DAC_UpdateValue(LPC_DAC, value & 0x3FF); // 10 bits
     }
 #include "lpc17xx_gpdma.h"
