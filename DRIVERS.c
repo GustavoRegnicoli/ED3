@@ -8,9 +8,9 @@
 
         GPIO_GetValue(port) //devuelve el estado.
 
-        GPIO_SetValue(port, mask) // pone en 1.
+        GPIO_SetValue(port, mask) // pone en 1. (1<<10)
 
-        GPIO_ClearValue(port, mask) // pone en 0.    
+        GPIO_ClearValue(port, mask) // pone en 0. (1<<10)   
 
     }
 
@@ -21,8 +21,8 @@
         NVIC_EnableIRQ(EINT3_IRQn);   // Todas las interrupciones GPIO caen en EINT3_IRQn
 
         GPIO_IntCmd(port, mask, edge):
-        // edge = 0 → nivel
-        // edge = 1 → flanco
+        // edge = 0 → bajada
+        // edge = 1 → ascendente
 
         GPIO_GetIntStatus(port, pin, edge)// devuelve si ocurrió la interrupción.
 
@@ -66,7 +66,7 @@
 #include "lpc17xx_timer.h"
     void Timer0_Config(void) {
         TIM_TIMERCFG_Type cfg;
-        cfg.PrescaleOption = TIM_PRESCALE_USVAL;
+        cfg.PrescaleOption = TIM_PRESCALE_USVAL; //TIM_PRESCALE_TICKVAL
         cfg.PrescaleValue  = 1;  // 1us por tick
 
         TIM_MATCHCFG_Type match;
@@ -74,13 +74,18 @@
         match.IntOnMatch   = ENABLE;
         match.ResetOnMatch = ENABLE;
         match.StopOnMatch  = DISABLE;
+        match.ExtMatchOutputType	=	TIM_EXTMATCH_NOTHING; // _NOTHING _LOW  _HIGH  _TOGGLE
         match.MatchValue   = 1000;  // 1 ms
 
-        TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &cfg);
+        TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &cfg); 
+        // TIM_TIMER_MODE = 0, Modo temporizador 
+        // TIM_COUNTER_RISING_MODE, Modo contador ascendente
+        // TIM_COUNTER_FALLING_MODE, Modo contador descendente
+        // TIM_COUNTER_ANY_MODE, Contador en ambos flancos
         TIM_ConfigMatch(LPC_TIM0, &match);
 
         NVIC_EnableIRQ(TIMER0_IRQn);
-        TIM_Cmd(LPC_TIM0, ENABLE);
+        	TIM_Cmd(LPC_TIM0, ENABLE);//habilita timer0
     }
     void TIMER0_IRQHandler(void) {
         TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
