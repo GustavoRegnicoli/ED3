@@ -193,6 +193,7 @@ void TIMER0_IRQHandler(void){
 
 void config_timer(){
 	TIM_TIMERCFG_Type	struct_config;
+	TIM_TIMERCFG_Type PRcfg;
 	TIM_MATCHCFG_Type	struct_match;
 
 	struct_config.PrescaleOption	=	TIM_PRESCALE_USVAL;//mide en ms o ticks
