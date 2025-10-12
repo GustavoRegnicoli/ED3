@@ -32,7 +32,7 @@
 #include "lpc17xx_exti.h"
 #include "lpc17xx_timer.h"
 
-//la rampa va de 512 a 1023 entonces la maxima resolucion es:
+//la rampa va de 512 a 1023 y de 0 a 512 entonces la maxima resolucion es:
 //3.3/512=6.44mV
 uint32_t wave_form[1023];
 uint32_t valor=512;
@@ -55,10 +55,11 @@ int main (void){
 		if(i<512){
 			valor++;
 			wave_form[i]=valor;
-		}else{
-			valor--;
-			wave_form[i]=valor;
 		}
+        if(i==513){
+			valor=0;
+		}
+
 	}
 
 	configPin();
@@ -116,6 +117,7 @@ void EINT0_IRQHandler(){
 		GPDMA_ChannelCmd(0,DISABLE);
 		GPDMA_ChannelCmd(1,DISABLE);
 		GPDMA_ChannelCmd(2,ENABLE);
+		//funcion se resetea en el adc despues de convertir
 	}
 
 }
