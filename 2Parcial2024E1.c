@@ -129,7 +129,7 @@ void TIMER0_IRQHandler(){
 			GPIO_ClearValue(0,1<<0);
 		}
 
-		if(paso<50+proporcion){//desfazo s1 respecto a s2
+		if(paso<50+proporcion){//desfaso s1 respecto a s2
 			GPIO_SetValue(0,1<<1);
 		}else{
 			GPIO_ClearValue(0,1<<1);
