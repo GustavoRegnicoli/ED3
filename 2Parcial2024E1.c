@@ -25,7 +25,6 @@
 
 uint16_t *ADCbuffer = (uint16_t*) 0x2008E000;
 
-uint32_t ticks=0;
 uint32_t adc_value=0;
 uint32_t total=0;
 uint32_t paso=0;
@@ -86,7 +85,7 @@ void ADC_IRQHandler(void)
 
 	if((uint32_t)ADCbuffer>=0x200BE400){
 		ADCbuffer= (uint16_t *)0x2008E000;	//mas 1024 valores
-		promedio=total;	// tomo muestra parcial
+		promedio=total;	// tomo muestra parcial, al pasar 100ms divido
 		total=0;	//al completar 1kB resetea total
 	}
 
@@ -122,20 +121,19 @@ void TIMER0_IRQHandler(){
 	//escalo el valor promedio para que este entre 0 y 50
     proporcion=50*promedio/4096;//4096 valores posibles del ADC
 
-	if(adc_value<2028){	// tomo 3.3/2 para caso 1
-		if(paso<50){	//toma S1 como referencia con ciclo trabajo 50%
+	if(adc_value<2028){	// tomo 3.3/2 para cada caso
+
+		if(paso<50){	//tomo S1 como referencia con ciclo trabajo 50%
 			GPIO_SetValue(0,1<<0);
 		}else{
 			GPIO_ClearValue(0,1<<0);
 		}
 
-		if(paso<50+proporcion){
+		if(paso<50+proporcion){//desfazo s1 respecto a s2
 			GPIO_SetValue(0,1<<1);
 		}else{
 			GPIO_ClearValue(0,1<<1);
 		}
-
-
 
 	}else{
 		if(paso<50){	//toma S2 como referencia con ciclo trabajo 50%
@@ -150,7 +148,7 @@ void TIMER0_IRQHandler(){
 		}
 	}
 
-	if(paso==100){
+	if(paso==100){//al tener int cada 1u el periodo es 100u y f=10kHz
 		paso=0;
 	}
 
